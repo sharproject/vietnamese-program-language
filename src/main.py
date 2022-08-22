@@ -1,6 +1,10 @@
 import os
 import sys
 import re
+import traceback
+import ast
+from math import pi, tau, e, sqrt
+
 
 def check_coment(data):
     code = []
@@ -13,14 +17,21 @@ def check_coment(data):
     translate_to_python(rcode)
 
 def translate_to_python(data):
-    pd = re.findall(r'in_ra_màn_hình:(.*)', data)
+    pd = re.findall(r'in_ra_màn_hình:[ ]*(.*)', data)
     for i in pd:
         try:
             if i.startswith('"') and i.endswith('"'):
                 print(i[1:-1])
             else:
-                print(eval(i))
+                try:
+                    print(int(i))
+                except ValueError:
+                    try:
+                        print(float(i))
+                    except ValueError:
+                        raise ValueError(f'`{i}` is not a number or float or string')
         except ValueError:
+            traceback.print_exc()
             print('Invalid input')
 
 def main(data, iseval=False):
@@ -40,7 +51,6 @@ def main(data, iseval=False):
         else:
             check_coment([a.strip() for a in data.split('\n')])
 
-
 if __name__ == '__main__':
     try:
         data = sys.argv[1]
@@ -57,4 +67,3 @@ if __name__ == '__main__':
                 sys.exit(0)
             else:
                 main(data, True)
-        exit(0)
