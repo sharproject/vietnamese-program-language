@@ -1,3 +1,9 @@
 {
-  "cSpell.words": ["vipl"]
+  "cSpell.words": ["vipl"],
+  "files.associations": {
+    "stdbool.h": "c",
+    "cstddef": "c",
+    "limits": "c"
+  },
+  "C_Cpp.errorSquiggles": "Disabled"
 }
