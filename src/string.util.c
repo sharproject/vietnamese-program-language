@@ -100,3 +100,33 @@ char *concat(const char *s1, const char *s2)
     strcat(result, s2);
     return result;
 }
+
+bool endWith(const char *string, const char *suffix)
+{
+    if (!string || !suffix)
+        return false;
+    size_t lenStr = strlen(string);
+    size_t lenSuffix = strlen(suffix);
+    if (lenSuffix > lenStr)
+        return false;
+    return strncmp(string + lenStr - lenSuffix, suffix, lenSuffix) == 0;
+}
+
+bool isNumber(char *str)
+{
+    if (strlen(str) == 0)
+    {
+        return false;
+    }
+    int j = 0;
+    while (j < strlen(str))
+    {
+        if (!(str[j] >= '0' && str[j] <= '9'))
+        {
+            return false;
+        }
+        j++;
+    }
+    return true;
+}
+

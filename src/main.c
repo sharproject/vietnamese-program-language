@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "string.util.c"
 #include "getConfig.c"
+#include "process.c"
 
 int main(int argc, char *argv[])
 {
@@ -31,17 +31,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                // if line start with "in:"
-                struct Config *config = findConfig(line, configs);
-                if (CompareString(config->value, "print"))
-                {
-                    // print the line
-                    // printf("%s\n", config->name);
-                    char *PrintStr = replaceWord(line, concat(config->name, ":"), "");
-                    PrintStr = trimString(PrintStr);
-                    PrintStr = replaceWord(PrintStr, "\"", "");
-                    printf("%s\n", PrintStr);
-                }
+                process(line, configs);
             }
         }
     }

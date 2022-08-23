@@ -1,5 +1,14 @@
-in_ra_màn_hình:"hello world"
-in_ra_màn_hình:"xin chào"
-in_ra_màn_hình:123
-in:12345
-out:123678
+# var a = "abc"
+# b := "abc"
+# đẹp_trai := 123
+
+# in_ra_màn_hình:"hello world"
+# in_ra_màn_hình:123
+# in:12345
+# out:123678
+# in: a
+# in_ra_màn_hình: b
+# in: đẹp_trai
+
+var int = 123
+in: int

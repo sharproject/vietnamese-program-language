@@ -1,4 +1,4 @@
-
+#include "string.util.c"
 struct Config
 {
     char *name;
@@ -31,7 +31,7 @@ struct Config *initConfig(char *configFile)
         char *value = sliceChar(line, indexOf(line, '=') + 1, strlen(line));
         value = replaceWord(value, "\"", "");
         value = trimString(value);
-        struct Config *newConfig = malloc(sizeof(struct Config));
+        struct Config *newConfig = (struct Config *)malloc(sizeof(struct Config));
         newConfig->name = name;
         newConfig->value = value;
         newConfig->next = head;
@@ -54,4 +54,3 @@ struct Config *findConfig(char *command, struct Config *configs)
     }
     return NULL;
 }
-
