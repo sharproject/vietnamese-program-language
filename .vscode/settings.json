@@ -3,7 +3,32 @@
   "files.associations": {
     "stdbool.h": "c",
     "cstddef": "c",
-    "limits": "c"
+    "limits": "c",
+    "array": "c",
+    "atomic": "c",
+    "bit": "c",
+    "*.tcc": "c",
+    "string": "c",
+    "unordered_map": "c",
+    "algorithm": "c",
+    "functional": "c",
+    "memory": "c",
+    "memory_resource": "c",
+    "optional": "c",
+    "random": "c",
+    "system_error": "c",
+    "tuple": "c",
+    "type_traits": "c",
+    "cmath": "c",
+    "fstream": "c",
+    "istream": "c",
+    "numeric": "c",
+    "ostream": "c",
+    "stdexcept": "c",
+    "streambuf": "c",
+    "string_view": "c",
+    "utility": "c",
+    "typeinfo": "c"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -33,7 +33,6 @@ void process(char *line, struct Config *configs)
 				{
 					printf("variable %s is not defined \n", PrintStr);
 					exit(1);
-					PrintStr = "";
 				}
 				PrintStr = variable->value;
 			}
@@ -55,6 +54,12 @@ void process(char *line, struct Config *configs)
 			{
 				return;
 			}
+			struct Config *VariableNameIsKeyWord = findConfigWithName(name, configs);
+			if (VariableNameIsKeyWord != NULL)
+			{
+				printf("can not declare variable %s because that is the keyword \n", name);
+				exit(1);
+			}
 			if (startsWith("\"", value) && endWith(value, "\""))
 			{
 				value = sliceChar(value, 1, strlen(value) - 1);
@@ -75,6 +80,12 @@ void process(char *line, struct Config *configs)
 		value = trimString(value);
 		if (value == "")
 			return;
+		struct Config *VariableNameIsKeyWord = findConfigWithName(name, configs);
+		if (VariableNameIsKeyWord != NULL)
+		{
+			printf("can not declare variable %s because that is the keyword \n", name);
+			exit(1);
+		}
 		if (startsWith("\"", value) && endWith(value, "\""))
 		{
 			value = sliceChar(value, 1, strlen(value) - 1);
