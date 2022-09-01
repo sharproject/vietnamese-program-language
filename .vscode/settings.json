@@ -25,9 +25,7 @@
     "*.rexx": "rexx",
     "stdbool.h": "c",
     "cstddef": "c",
-    "limits": "c",
-    "string.h": "c",
-    "stdio.h": "c"
+    "limits": "c"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }

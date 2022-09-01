@@ -11,4 +11,5 @@
 # in: đẹp_trai
 
 var int = 123
+int = int + 1
 in: int

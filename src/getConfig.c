@@ -71,3 +71,19 @@ struct Config *findConfig(char *command, struct Config *configs)
     }
     return NULL;
 }
+
+struct Config *findConfigWithName(char *command, struct Config *configs)
+{
+    struct Config *config = configs;
+    while (config)
+    {
+        char **command = str_split(command," ");
+        
+        if (CompareString(config->name, command))
+        {
+            return config;
+        }
+        config = config->next;
+    }
+    return NULL;
+}

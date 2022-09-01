@@ -3,6 +3,7 @@ struct Map
 {
     char *key;
     char *value;
+    int *IntValue;
     struct Map *next;
 };
 
@@ -14,6 +15,7 @@ void newVariable(char *name, char *value)
     newConfig->key = name;
     newConfig->value = value;
     newConfig->next = head;
+    newConfig->IntValue = isNumber(value) ? (int *)value : NULL;
     head = newConfig;
 }
 
