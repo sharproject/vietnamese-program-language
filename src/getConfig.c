@@ -14,10 +14,15 @@ struct Config *initConfig(char *configFile)
         printf("Error: File not found\n");
         return NULL;
     }
-    char line[256];
+    char line[2047];
+    int checked = 0;
     struct Config *head = NULL;
-    while (fgets(line, sizeof(line), file))
-    {
+    while(fgets(line, 2047, file) != NULL) {
+        char *key;
+        char *name;
+        char *value;
+        int i, j;
+
         if (line[0] == '#')
         {
             continue;
@@ -26,17 +31,29 @@ struct Config *initConfig(char *configFile)
         {
             continue;
         }
-        // example config line is in="print"
-        char *name = sliceChar(line, 0, indexOf(line, '='));
-        char *value = sliceChar(line, indexOf(line, '=') + 1, strlen(line));
-        value = replaceWord(value, "\"", "");
-        value = trimString(value);
+        key = sliceChar(line, indexOf(line, '<') + 1, strlen(line));
+        key = sliceChar(key, 0 + indexOf(key, '!') + 1, strlen(key));
+        key = replaceWord(key, "DOCTYPE Note [", "");
+        key = sliceChar(key, 0 + indexOf(key, '>') + 1, strlen(key));
+        key = sliceChar(key, 0, indexOf(key, '<'));
+
         struct Config *newConfig = (struct Config *)malloc(sizeof(struct Config));
+
+        if (startsWith(key, "\n")) continue;
+        if (checked == 0) {
+            name = key;
+            checked = 1;
+        } else {
+            checked = 0;
+            value = key;
+            value = replaceWord(value, "\"", "");
+            value = trimString(value);
+        }
         newConfig->name = name;
         newConfig->value = value;
         newConfig->next = head;
         head = newConfig;
-    }
+    };
     return head;
 }
 

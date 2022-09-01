@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        struct Config *configs = initConfig("./keyword.config");
+        struct Config *configs = initConfig("./config/keyword.xml");
         // open file
         FILE *file = fopen(argv[1], "r");
         // if file == NULL

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 bool startsWith(const char *pre, const char *str)
-{
+{  
     size_t lenPrefix = strlen(pre),
            lenString = strlen(str);
     return lenString < lenPrefix ? false : memcmp(pre, str, lenPrefix) == 0;
