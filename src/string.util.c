@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <assert.h>
+
 bool startsWith(const char *pre, const char *str)
 {  
     size_t lenPrefix = strlen(pre),
@@ -130,7 +132,7 @@ bool isNumber(char *str)
     return true;
 }
 
-char **str_split(char *a_str, const char a_delim)
+char **strSplit(char *a_str, const char a_delim)
 {
     char **result = 0;
     size_t count = 0;

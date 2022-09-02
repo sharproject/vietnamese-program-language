@@ -17,7 +17,8 @@ struct Config *initConfig(char *configFile)
     char line[2047];
     int checked = 0;
     struct Config *head = NULL;
-    while(fgets(line, 2047, file) != NULL) {
+    while (fgets(line, 2047, file) != NULL)
+    {
         char *key;
         char *name;
         char *value;
@@ -39,11 +40,15 @@ struct Config *initConfig(char *configFile)
 
         struct Config *newConfig = (struct Config *)malloc(sizeof(struct Config));
 
-        if (startsWith(key, "\n")) continue;
-        if (checked == 0) {
+        if (startsWith(key, "\n"))
+            continue;
+        if (checked == 0)
+        {
             name = key;
             checked = 1;
-        } else {
+        }
+        else
+        {
             checked = 0;
             value = key;
             value = replaceWord(value, "\"", "");
@@ -72,14 +77,14 @@ struct Config *findConfig(char *command, struct Config *configs)
     return NULL;
 }
 
-struct Config *findConfigWithName(char *command, struct Config *configs)
+struct Config *findConfigWithName(char *commandName, struct Config *configs)
 {
     struct Config *config = configs;
     while (config)
     {
-        char **command = str_split(command," ");
-        
-        if (CompareString(config->name, command))
+        char **command = strSplit(commandName, ' ');
+
+        if (CompareString(config->name, commandName))
         {
             return config;
         }
