@@ -1,5 +1,5 @@
 # var a = "abc"
-# b := "abc"
+b := "abc"
 # đẹp_trai := 123
 
 # in_ra_màn_hình:"hello world"
@@ -10,6 +10,6 @@
 # in_ra_màn_hình: b
 # in: đẹp_trai
 
-var int = 123
-# int = int + 1
-in: int
+var inklja = 123
+inklja = inklja + 1
+in: inklja

@@ -13,11 +13,9 @@ void process(char *line, struct Config *configs)
 	{
 		if (CompareString(config->value, "print"))
 		{
-			// print the line
-			// printf("%s\n", config->name);
 			char *PrintStr = replaceWord(line, concat(config->name, ":"), "");
 			PrintStr = trimString(PrintStr);
-			if (PrintStr == "")
+			if (CompareString(PrintStr, ""))
 			{
 				printf("\n");
 				return;
@@ -31,7 +29,7 @@ void process(char *line, struct Config *configs)
 				struct Map *variable = getVariable(PrintStr);
 				if (variable == NULL)
 				{
-					printf("variable %s is not defined \n", PrintStr);
+					printf("variable [%s] is not defined \n", PrintStr);
 					exit(1);
 				}
 				PrintStr = variable->value;
@@ -68,10 +66,12 @@ void process(char *line, struct Config *configs)
 		}
 	}
 	char createVarSymbol[] = ":=";
+	char setVarValue[] = "=";
 	if (strstr(line, createVarSymbol) != NULL)
 	{
 		char *found = strstr(line, createVarSymbol);
 		int index = found - line;
+
 		char *value = sliceChar(line, index + strlen(createVarSymbol), strlen(line));
 		char *name = sliceChar(line, 0, index);
 		name = trimString(name);
@@ -91,5 +91,20 @@ void process(char *line, struct Config *configs)
 			value = sliceChar(value, 1, strlen(value) - 1);
 		}
 		newVariable(name, value);
+	}
+	else if (strstr(line, setVarValue) != NULL && config == NULL)
+	{
+		char *found = strstr(line, setVarValue);
+		int index = found - line;
+		char *value = sliceChar(line, index + strlen(setVarValue), strlen(line));
+		char *name = sliceChar(line, 0, index);
+		printf("value: %s , name : %s", value, name);
+		struct Map *variable = getVariable(name);
+		if (variable == NULL)
+		{
+			printf("variable %s is not defined \n", name);
+			exit(1);
+		}
+		setVariable(name, value);
 	}
 }

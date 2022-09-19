@@ -46,3 +46,19 @@ struct Map *getVariable(char *name)
     }
     return NULL;
 }
+
+bool setVariable(char *name, char *value)
+{
+    struct Map *item = head;
+    while (item)
+    {
+        if (CompareString(item->key, name))
+        {
+            item->value = value;
+            item->IntValue = isNumber(value) ? (int *)value : NULL;
+            return true;
+        }
+        item = item->next;
+    }
+    return false;
+}
