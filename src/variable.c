@@ -15,10 +15,17 @@ void newVariable(char *name, char *value)
     if (CompareString(trimString(name), ""))
     {
         printf("cannot declare var with name is [%s] \n", name);
+        exit(1);
     }
     if (CompareString(trimString(value), ""))
     {
         printf("cannot declare var with value is [%s] \n", value);
+        exit(1);
+    }
+    if (getVariableValue(name) != NULL)
+    {
+        printf("var [%s] was declare", name);
+        exit(1);
     }
     newConfig->key = trimString(name);
     newConfig->value = trimString(value);
@@ -33,6 +40,7 @@ char *getVariableValue(char *name)
     if (CompareString(trimString(name), ""))
     {
         printf("cannot get var with name is [%s] \n", name);
+        exit(1);
     }
     while (item)
     {
@@ -51,6 +59,7 @@ struct Map *getVariable(char *name)
     if (CompareString(trimString(name), ""))
     {
         printf("cannot get var with name is [%s] \n", name);
+        exit(1);
     }
     while (item)
     {
@@ -68,10 +77,12 @@ bool setVariable(char *name, char *value)
     if (CompareString(trimString(name), ""))
     {
         printf("cannot set var with name is [%s] \n", name);
+        exit(1);
     }
     if (CompareString(trimString(value), ""))
     {
         printf("cannot set var with value is [%s] \n", value);
+        exit(1);
     }
     struct Map *item = head;
     while (item)
