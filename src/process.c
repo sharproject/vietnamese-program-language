@@ -98,7 +98,6 @@ void process(char *line, struct Config *configs)
 		int index = found - line;
 		char *value = sliceChar(line, index + strlen(setVarValue), strlen(line));
 		char *name = sliceChar(line, 0, index);
-		printf("value: %s , name : %s", value, name);
 		struct Map *variable = getVariable(name);
 		if (variable == NULL)
 		{

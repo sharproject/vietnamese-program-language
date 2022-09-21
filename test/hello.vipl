@@ -10,6 +10,6 @@ b := "abc"
 # in_ra_màn_hình: b
 # in: đẹp_trai
 
-var inklja = 123
-inklja = inklja + 1
-in: inklja
+var data = 123
+data = 1
+in: data

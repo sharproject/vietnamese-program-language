@@ -12,8 +12,16 @@ struct Map *head = NULL;
 void newVariable(char *name, char *value)
 {
     struct Map *newConfig = (struct Map *)malloc(sizeof(struct Map));
-    newConfig->key = name;
-    newConfig->value = value;
+    if (CompareString(trimString(name), ""))
+    {
+        printf("cannot declare var with name is [%s] \n", name);
+    }
+    if (CompareString(trimString(value), ""))
+    {
+        printf("cannot declare var with value is [%s] \n", value);
+    }
+    newConfig->key = trimString(name);
+    newConfig->value = trimString(value);
     newConfig->next = head;
     newConfig->IntValue = isNumber(value) ? (int *)value : NULL;
     head = newConfig;
@@ -22,9 +30,13 @@ void newVariable(char *name, char *value)
 char *getVariableValue(char *name)
 {
     struct Map *item = head;
+    if (CompareString(trimString(name), ""))
+    {
+        printf("cannot get var with name is [%s] \n", name);
+    }
     while (item)
     {
-        if (CompareString(item->key, name))
+        if (CompareString(item->key, trimString(name)))
         {
             return item->value;
         }
@@ -36,9 +48,13 @@ char *getVariableValue(char *name)
 struct Map *getVariable(char *name)
 {
     struct Map *item = head;
+    if (CompareString(trimString(name), ""))
+    {
+        printf("cannot get var with name is [%s] \n", name);
+    }
     while (item)
     {
-        if (CompareString(item->key, name))
+        if (CompareString(item->key, trimString(name)))
         {
             return item;
         }
@@ -49,13 +65,21 @@ struct Map *getVariable(char *name)
 
 bool setVariable(char *name, char *value)
 {
+    if (CompareString(trimString(name), ""))
+    {
+        printf("cannot set var with name is [%s] \n", name);
+    }
+    if (CompareString(trimString(value), ""))
+    {
+        printf("cannot set var with value is [%s] \n", value);
+    }
     struct Map *item = head;
     while (item)
     {
-        if (CompareString(item->key, name))
+        if (CompareString(item->key, trimString(name)))
         {
-            item->value = value;
-            item->IntValue = isNumber(value) ? (int *)value : NULL;
+            item->value = trimString(value);
+            item->IntValue = isNumber(value) ? (int *)(trimString(value)) : NULL;
             return true;
         }
         item = item->next;
