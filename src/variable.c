@@ -9,31 +9,6 @@ struct Map
 
 struct Map *head = NULL;
 
-void newVariable(char *name, char *value)
-{
-    struct Map *newConfig = (struct Map *)malloc(sizeof(struct Map));
-    if (CompareString(trimString(name), ""))
-    {
-        printf("cannot declare var with name is [%s] \n", name);
-        exit(1);
-    }
-    if (CompareString(trimString(value), ""))
-    {
-        printf("cannot declare var with value is [%s] \n", value);
-        exit(1);
-    }
-    if (getVariableValue(name) != NULL)
-    {
-        printf("var [%s] was declare", name);
-        exit(1);
-    }
-    newConfig->key = trimString(name);
-    newConfig->value = trimString(value);
-    newConfig->next = head;
-    newConfig->IntValue = isNumber(value) ? (int *)value : NULL;
-    head = newConfig;
-}
-
 char *getVariableValue(char *name)
 {
     struct Map *item = head;
@@ -96,4 +71,29 @@ bool setVariable(char *name, char *value)
         item = item->next;
     }
     return false;
+}
+
+void newVariable(char *name, char *value)
+{
+    struct Map *newConfig = (struct Map *)malloc(sizeof(struct Map));
+    if (CompareString(trimString(name), ""))
+    {
+        printf("cannot declare var with name is [%s] \n", name);
+        exit(1);
+    }
+    if (CompareString(trimString(value), ""))
+    {
+        printf("cannot declare var with value is [%s] \n", value);
+        exit(1);
+    }
+    if (getVariableValue(name) != NULL)
+    {
+        printf("var [%s] was declare", name);
+        exit(1);
+    }
+    newConfig->key = trimString(name);
+    newConfig->value = trimString(value);
+    newConfig->next = head;
+    newConfig->IntValue = isNumber(value) ? (int *)value : NULL;
+    head = newConfig;
 }
