@@ -1,15 +1,16 @@
-# var a = "abc"
-b := "abc"
-# đẹp_trai := 123
+var a = "abc"
+in("hello my message is ", a , "\n")
 
-# in_ra_màn_hình:"hello world"
-# in_ra_màn_hình:123
-# in:12345
-# out:123678
-# in: a
-# in_ra_màn_hình: b
-# in: đẹp_trai
+in_ra_màn_hình("hello world"," \n")
+in ("đập đá", " đá thủ"," \n") 
+in ("hello" , " world", " \n")
+in_ra_màn_hình(123,"\n")
+in(12345,"\n")
+out(123678,"\n")
+in_ra_màn_hình ( "hello world","\n" )
+
 
 var data = 123
-data = 1
-in: data
+in: "xin chào data là ", data , "\n"
+data = 1.5
+in: "xin chào data là ", data , "\n"
