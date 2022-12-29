@@ -1,16 +1,32 @@
-var a = "abc"
-in("hello my message is ", a , "\n")
+# var a = "abc"
+# in("hello my message is ", a , "\n")
+# 
+# in_ra_màn_hình("hello world"," \n")
+# in ("đập đá", " đá thủ"," \n") 
+# in ("hello" , " world", " \n")
+# in_ra_màn_hình(123,"\n")
+# in(12345,"\n")
+# out(123678,"\n")
+# in_ra_màn_hình ( "hello world","\n" )
+# 
+# 
+# var data = 123
+# in: "xin chào data là ", data , "\n"
+# data = 1.5
+# in: "xin chào data là ", data , "\n"
 
-in_ra_màn_hình("hello world"," \n")
-in ("đập đá", " đá thủ"," \n") 
-in ("hello" , " world", " \n")
-in_ra_màn_hình(123,"\n")
-in(12345,"\n")
-out(123678,"\n")
-in_ra_màn_hình ( "hello world","\n" )
-
-
-var data = 123
-in: "xin chào data là ", data , "\n"
-data = 1.5
-in: "xin chào data là ", data , "\n"
+# var a = 1
+# var b = 2
+# var c = 3
+# var d = 4
+# var e = 5
+# var f = 6
+# in: (a + b) + (c+d) , "\n"
+# in: (a + b) + (c + d) + (e + f) , "\n"
+# in:(a + b + (e +f)) + (c +d) , "\n"
+# in: a + b + (c +d) , "\n"
+# in: a + b + c + d , "\n"
+# in: 123 + 465 + 789 , "\n"
+# in: (123 + 456) + 789 , "\n"
+# in: (a),"\n"
+# in: 123 + a + b + c , "\n"

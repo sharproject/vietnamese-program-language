@@ -114,6 +114,7 @@ impl<'a> Compiler<'a> {
                 self.config,
                 command,
             ),
+            crate::parse::Operation::IntOperation(_) => todo!(),
         }
     }
 
