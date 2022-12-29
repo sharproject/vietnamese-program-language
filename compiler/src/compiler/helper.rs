@@ -4,10 +4,10 @@ use inkwell::{
     builder::Builder,
     context::Context,
     module::Module,
-    values::{FunctionValue, PointerValue},
+    values::{BasicValueEnum, FunctionValue, IntMathValue, PointerValue},
 };
 
-use crate::parse::{AstNode, AstNodeValue, KeywordConfig};
+use crate::parse::{AstNode, AstNodeValue, KeywordConfig, Operation};
 
 use super::VariableMetaType;
 
@@ -206,6 +206,12 @@ impl ParseExpr {
                                 panic!("code kiểu beep gì vậy đã ko phải là biến mặc định rồi mà còn dùng biến ko được define(khai báo đó nếu ko bik từ này thì nên học thêm từ undefined đi) lỗi tại dòng này nè {} lo đi mà sửa đi",line);
                             }
                         }
+                        AstNodeValue::String(_) => todo!(),
+                        AstNodeValue::Number(_) => todo!(),
+                        AstNodeValue::None => todo!(),
+                        AstNodeValue::Bool(_) => todo!(),
+                        AstNodeValue::Variable(_) => todo!(),
+                        AstNodeValue::Operation(_) => todo!(),
                     }
                 }
                 let result = builder.build_call(function, &call_args, "function_return");
@@ -275,6 +281,23 @@ impl ParseExpr {
                     } else {
                         panic!("code kiểu beep gì vậy đã ko phải là biến mặc định rồi mà còn dùng biến ko được define(khai báo đó nếu ko bik từ này thì nên học thêm từ undefined đi) lỗi tại dòng này nè {} lo đi mà sửa đi",line);
                     }
+                }
+                AstNodeValue::String(_) => todo!(),
+                AstNodeValue::Number(_) => todo!(),
+                AstNodeValue::None => todo!(),
+                AstNodeValue::Bool(_) => todo!(),
+                AstNodeValue::Variable(_) => todo!(),
+                AstNodeValue::Operation(o) => {
+                    compile_math_operation(
+                        context,
+                        builder,
+                        module,
+                        variable,
+                        variable_metadata,
+                        line,
+                        &o,
+                    );
+                    // dbg!(&o);
                 }
             }
         }
@@ -359,6 +382,12 @@ impl ParseExpr {
                 crate::parse::AstNodeValue::None => todo!(),
                 crate::parse::AstNodeValue::Bool(_) => todo!(),
                 crate::parse::AstNodeValue::Variable(_) => todo!(),
+                AstNodeValue::String(_) => todo!(),
+                AstNodeValue::Number(_) => todo!(),
+                AstNodeValue::None => todo!(),
+                AstNodeValue::Bool(_) => todo!(),
+                AstNodeValue::Variable(_) => todo!(),
+                AstNodeValue::Operation(_) => todo!(),
             },
             None => todo!(),
         }
@@ -437,5 +466,95 @@ impl ParseExpr {
                 }
             }
         }
+    }
+}
+
+fn compile_math_operation<'a>(
+    context: &'a Context,
+    builder: &Builder<'a>,
+    module: &Module<'a>,
+    variable: &BTreeMap<String, PointerValue<'a>>,
+    variable_metadata: &BTreeMap<String, VariableMetaType>,
+    line: usize,
+    node: &AstNode,
+) -> BasicValueEnum<'a> {
+    if let Operation::Value(v) = &node.op {
+        let value = v.get_math_value().unwrap();
+        match value {
+            AstNodeValue::String(_) => todo!(),
+            AstNodeValue::Number(_) => todo!(),
+            AstNodeValue::None => todo!(),
+            AstNodeValue::Bool(_) => todo!(),
+            AstNodeValue::Variable(name) => {
+                return builder.build_load(
+                    variable
+                        .get(&name)
+                        .expect(
+                            "sao dùng biến được khi không có biến dậy anh zai anh zai dùng kiểu gì",
+                        )
+                        .clone(),
+                    "load",
+                );
+            }
+            AstNodeValue::Operation(_) => todo!(),
+        }
+    } else if let Operation::IntOperation(i) = &node.op {
+        let fn_match_op = |a: &AstNode| match &a.op {
+            Operation::None => todo!(),
+            Operation::Ident(_) => todo!(),
+            Operation::Value(_) => compile_math_operation(
+                context,
+                builder,
+                module,
+                variable,
+                variable_metadata,
+                line,
+                a,
+            ),
+            Operation::Call => todo!(),
+            Operation::NewVariable => todo!(),
+            Operation::SetVariable => todo!(),
+            Operation::IntOperation(i) => compile_math_operation(
+                context,
+                builder,
+                module,
+                variable,
+                variable_metadata,
+                line,
+                a,
+            ),
+        };
+        let left_value = fn_match_op(&node.left[0]);
+        let right_value = fn_match_op(&node.right[0]);
+
+        match i {
+            crate::parse::IntOperationType::Plus => {
+                if left_value.get_type().print_to_string().to_string()
+                    != right_value.get_type().print_to_string().to_string()
+                {
+                    panic!("type is not valid");
+                }
+                match left_value {
+                    BasicValueEnum::ArrayValue(_) => todo!(),
+                    BasicValueEnum::IntValue(v) => {
+                        let rhs = inkwell::values::IntValue::from(right_value.into_int_value());
+                        let lhs = inkwell::values::IntValue::from(v);
+                        let rhs_enum = inkwell::values::BasicValueEnum::IntValue(rhs);
+                        let lhs_enum = inkwell::values::BasicValueEnum::IntValue(lhs);
+                        builder.build_int_add(lhs_enum, rhs_enum, "")
+                    }
+                    BasicValueEnum::FloatValue(_) => todo!(),
+                    BasicValueEnum::PointerValue(_) => todo!(),
+                    BasicValueEnum::StructValue(_) => todo!(),
+                    BasicValueEnum::VectorValue(_) => todo!(),
+                }
+            }
+            crate::parse::IntOperationType::Minus => todo!(),
+            crate::parse::IntOperationType::Times => todo!(),
+            crate::parse::IntOperationType::Divide => todo!(),
+            crate::parse::IntOperationType::None => todo!(),
+        }
+    } else {
+        todo!()
     }
 }
