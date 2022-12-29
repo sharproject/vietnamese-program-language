@@ -4,7 +4,7 @@ use inkwell::{
     builder::Builder,
     context::Context,
     module::Module,
-    values::{BasicValueEnum, FunctionValue, IntMathValue, PointerValue},
+    values::{BasicValueEnum, FunctionValue, PointerValue},
 };
 
 use crate::parse::{AstNode, AstNodeValue, KeywordConfig, Operation};
@@ -206,12 +206,8 @@ impl ParseExpr {
                                 panic!("code kiểu beep gì vậy đã ko phải là biến mặc định rồi mà còn dùng biến ko được define(khai báo đó nếu ko bik từ này thì nên học thêm từ undefined đi) lỗi tại dòng này nè {} lo đi mà sửa đi",line);
                             }
                         }
-                        AstNodeValue::String(_) => todo!(),
-                        AstNodeValue::Number(_) => todo!(),
-                        AstNodeValue::None => todo!(),
-                        AstNodeValue::Bool(_) => todo!(),
-                        AstNodeValue::Variable(_) => todo!(),
                         AstNodeValue::Operation(_) => todo!(),
+                        _ => todo!(),
                     }
                 }
                 let result = builder.build_call(function, &call_args, "function_return");
@@ -282,13 +278,8 @@ impl ParseExpr {
                         panic!("code kiểu beep gì vậy đã ko phải là biến mặc định rồi mà còn dùng biến ko được define(khai báo đó nếu ko bik từ này thì nên học thêm từ undefined đi) lỗi tại dòng này nè {} lo đi mà sửa đi",line);
                     }
                 }
-                AstNodeValue::String(_) => todo!(),
-                AstNodeValue::Number(_) => todo!(),
-                AstNodeValue::None => todo!(),
-                AstNodeValue::Bool(_) => todo!(),
-                AstNodeValue::Variable(_) => todo!(),
                 AstNodeValue::Operation(o) => {
-                    compile_math_operation(
+                    let value = compile_math_operation(
                         context,
                         builder,
                         module,
@@ -297,8 +288,19 @@ impl ParseExpr {
                         line,
                         &o,
                     );
-                    // dbg!(&o);
+                    match value {
+                        BasicValueEnum::ArrayValue(_) => todo!(),
+                        BasicValueEnum::IntValue(_) => {
+                            print_value.push_str("%d");
+                            print_args.push(value.clone());
+                        }
+                        BasicValueEnum::FloatValue(_) => todo!(),
+                        BasicValueEnum::PointerValue(_) => todo!(),
+                        BasicValueEnum::StructValue(_) => todo!(),
+                        BasicValueEnum::VectorValue(_) => todo!(),
+                    }
                 }
+                _ => todo!(),
             }
         }
         // print_value.push_str("\n");
@@ -382,12 +384,8 @@ impl ParseExpr {
                 crate::parse::AstNodeValue::None => todo!(),
                 crate::parse::AstNodeValue::Bool(_) => todo!(),
                 crate::parse::AstNodeValue::Variable(_) => todo!(),
-                AstNodeValue::String(_) => todo!(),
-                AstNodeValue::Number(_) => todo!(),
-                AstNodeValue::None => todo!(),
-                AstNodeValue::Bool(_) => todo!(),
-                AstNodeValue::Variable(_) => todo!(),
                 AstNodeValue::Operation(_) => todo!(),
+                _ => todo!(),
             },
             None => todo!(),
         }
@@ -482,7 +480,15 @@ fn compile_math_operation<'a>(
         let value = v.get_math_value().unwrap();
         match value {
             AstNodeValue::String(_) => todo!(),
-            AstNodeValue::Number(_) => todo!(),
+            AstNodeValue::Number(n) => {
+                if n.fract() == 0.0 {
+                    inkwell::values::BasicValueEnum::IntValue(
+                        context.i64_type().const_int(n as u64, false),
+                    )
+                } else {
+                    inkwell::values::BasicValueEnum::FloatValue(context.f64_type().const_float(n))
+                }
+            }
             AstNodeValue::None => todo!(),
             AstNodeValue::Bool(_) => todo!(),
             AstNodeValue::Variable(name) => {
@@ -514,7 +520,7 @@ fn compile_math_operation<'a>(
             Operation::Call => todo!(),
             Operation::NewVariable => todo!(),
             Operation::SetVariable => todo!(),
-            Operation::IntOperation(i) => compile_math_operation(
+            Operation::IntOperation(_) => compile_math_operation(
                 context,
                 builder,
                 module,
@@ -539,9 +545,7 @@ fn compile_math_operation<'a>(
                     BasicValueEnum::IntValue(v) => {
                         let rhs = inkwell::values::IntValue::from(right_value.into_int_value());
                         let lhs = inkwell::values::IntValue::from(v);
-                        let rhs_enum = inkwell::values::BasicValueEnum::IntValue(rhs);
-                        let lhs_enum = inkwell::values::BasicValueEnum::IntValue(lhs);
-                        builder.build_int_add(lhs_enum, rhs_enum, "")
+                        inkwell::values::BasicValueEnum::from(builder.build_int_add(lhs, rhs, ""))
                     }
                     BasicValueEnum::FloatValue(_) => todo!(),
                     BasicValueEnum::PointerValue(_) => todo!(),
