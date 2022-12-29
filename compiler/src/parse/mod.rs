@@ -430,7 +430,7 @@ fn parse_math_operation(
                 let mut pushable = true;
                 if c.is_numeric() {
                     while let Some(ch) = char_list.next() {
-                        if ch.is_numeric() {
+                        if ch.is_numeric() || ch == '.' {
                             tmp.push(ch);
                         } else {
                             // let mut new_char_list = vec![];

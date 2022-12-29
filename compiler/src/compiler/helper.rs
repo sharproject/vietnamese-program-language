@@ -22,12 +22,11 @@ impl CompilerHelper {
         let i8_types = context.i8_type();
         let string_size = context
             .i64_type()
-            .const_int(string.len().try_into().unwrap(), false);
+            .const_int(string.len().try_into().unwrap(), true);
         let string_value = builder
             .build_array_malloc(i8_types, string_size.clone(), name)
             .unwrap();
 
-        // builder.build_store(string_value, context.const_string(string.as_bytes(), false));
         let global_string_value =
             builder.build_global_string_ptr(&string.replace("\\n", "\n"), "str");
         builder
@@ -75,7 +74,7 @@ impl CompilerHelper {
     ) -> PointerValue<'a> {
         let i64_types = context.i64_type();
         let string_value = builder.build_alloca(i64_types, name);
-        builder.build_store(string_value, i64_types.const_int(value as u64, false));
+        builder.build_store(string_value, i64_types.const_int(value as u64, true));
 
         return string_value;
     }
@@ -171,7 +170,7 @@ impl ParseExpr {
                         crate::parse::AstNodeValue::Number(num) => {
                             if num.fract() == 0.0 {
                                 call_args.push(inkwell::values::BasicMetadataValueEnum::IntValue(
-                                    context.i64_type().const_int(num as u64, false),
+                                    context.i64_type().const_int(num as u64, true),
                                 ))
                             } else {
                                 call_args.push(
@@ -184,7 +183,7 @@ impl ParseExpr {
                         crate::parse::AstNodeValue::None => todo!(),
                         crate::parse::AstNodeValue::Bool(b) => {
                             call_args.push(inkwell::values::BasicMetadataValueEnum::IntValue(
-                                context.bool_type().const_int(b as u64, false),
+                                context.bool_type().const_int(b as u64, true),
                             ));
                         }
                         crate::parse::AstNodeValue::Variable(name) => {
@@ -207,7 +206,6 @@ impl ParseExpr {
                             }
                         }
                         AstNodeValue::Operation(_) => todo!(),
-                        _ => todo!(),
                     }
                 }
                 let result = builder.build_call(function, &call_args, "function_return");
@@ -294,13 +292,15 @@ impl ParseExpr {
                             print_value.push_str("%d");
                             print_args.push(value.clone());
                         }
-                        BasicValueEnum::FloatValue(_) => todo!(),
+                        BasicValueEnum::FloatValue(_) => {
+                            print_value.push_str("%f");
+                            print_args.push(value.clone());
+                        }
                         BasicValueEnum::PointerValue(_) => todo!(),
                         BasicValueEnum::StructValue(_) => todo!(),
                         BasicValueEnum::VectorValue(_) => todo!(),
                     }
                 }
-                _ => todo!(),
             }
         }
         // print_value.push_str("\n");
@@ -384,8 +384,7 @@ impl ParseExpr {
                 crate::parse::AstNodeValue::None => todo!(),
                 crate::parse::AstNodeValue::Bool(_) => todo!(),
                 crate::parse::AstNodeValue::Variable(_) => todo!(),
-                AstNodeValue::Operation(_) => todo!(),
-                _ => todo!(),
+                crate::parse::AstNodeValue::Operation(_) => todo!(),
             },
             None => todo!(),
         }
@@ -442,7 +441,7 @@ impl ParseExpr {
                         && (num.fract() == 0.0)
                     {
                         // int
-                        builder.build_store(*ptr, context.i64_type().const_int(num as u64, false));
+                        builder.build_store(*ptr, context.i64_type().const_int(num as u64, true));
                     } else if ptr.get_type().get_element_type().is_int_type()
                         && !(num.fract() == 0.0)
                     {
@@ -483,7 +482,7 @@ fn compile_math_operation<'a>(
             AstNodeValue::Number(n) => {
                 if n.fract() == 0.0 {
                     inkwell::values::BasicValueEnum::IntValue(
-                        context.i64_type().const_int(n as u64, false),
+                        context.i64_type().const_int(n as u64, true),
                     )
                 } else {
                     inkwell::values::BasicValueEnum::FloatValue(context.f64_type().const_float(n))
@@ -532,12 +531,18 @@ fn compile_math_operation<'a>(
         };
         let left_value = fn_match_op(&node.left[0]);
         let right_value = fn_match_op(&node.right[0]);
+        let check_is_valid_type = |l: &BasicValueEnum, r: &BasicValueEnum| {
+            if l.get_type().print_to_string().to_string()
+                != r.get_type().print_to_string().to_string()
+            {
+                return false;
+            }
+            return true;
+        };
 
         match i {
             crate::parse::IntOperationType::Plus => {
-                if left_value.get_type().print_to_string().to_string()
-                    != right_value.get_type().print_to_string().to_string()
-                {
+                if !check_is_valid_type(&left_value, &right_value) {
                     panic!("type is not valid");
                 }
                 match left_value {
@@ -547,15 +552,81 @@ fn compile_math_operation<'a>(
                         let lhs = inkwell::values::IntValue::from(v);
                         inkwell::values::BasicValueEnum::from(builder.build_int_add(lhs, rhs, ""))
                     }
-                    BasicValueEnum::FloatValue(_) => todo!(),
+                    BasicValueEnum::FloatValue(f) => {
+                        let rhs = inkwell::values::FloatValue::from(right_value.into_float_value());
+                        let lhs = inkwell::values::FloatValue::from(f);
+                        inkwell::values::BasicValueEnum::from(builder.build_float_add(lhs, rhs, ""))
+                    }
                     BasicValueEnum::PointerValue(_) => todo!(),
                     BasicValueEnum::StructValue(_) => todo!(),
                     BasicValueEnum::VectorValue(_) => todo!(),
                 }
             }
-            crate::parse::IntOperationType::Minus => todo!(),
-            crate::parse::IntOperationType::Times => todo!(),
-            crate::parse::IntOperationType::Divide => todo!(),
+            crate::parse::IntOperationType::Minus => {
+                if !check_is_valid_type(&left_value, &right_value) {
+                    panic!("type is not valid");
+                }
+                match left_value {
+                    BasicValueEnum::ArrayValue(_) => todo!(),
+                    BasicValueEnum::IntValue(v) => {
+                        let rhs = inkwell::values::IntValue::from(right_value.into_int_value());
+                        let lhs = inkwell::values::IntValue::from(v);
+                        inkwell::values::BasicValueEnum::from(builder.build_int_sub(lhs, rhs, ""))
+                    }
+                    BasicValueEnum::FloatValue(f) => {
+                        let rhs = inkwell::values::FloatValue::from(right_value.into_float_value());
+                        let lhs = inkwell::values::FloatValue::from(f);
+                        inkwell::values::BasicValueEnum::from(builder.build_float_sub(lhs, rhs, ""))
+                    }
+                    BasicValueEnum::PointerValue(_) => todo!(),
+                    BasicValueEnum::StructValue(_) => todo!(),
+                    BasicValueEnum::VectorValue(_) => todo!(),
+                }
+            }
+            crate::parse::IntOperationType::Times => {
+                if !check_is_valid_type(&left_value, &right_value) {
+                    panic!("type is not valid");
+                }
+                match left_value {
+                    BasicValueEnum::ArrayValue(_) => todo!(),
+                    BasicValueEnum::IntValue(v) => {
+                        let rhs = inkwell::values::IntValue::from(right_value.into_int_value());
+                        let lhs = inkwell::values::IntValue::from(v);
+                        inkwell::values::BasicValueEnum::from(builder.build_int_mul(lhs, rhs, ""))
+                    }
+                    BasicValueEnum::FloatValue(f) => {
+                        let rhs = inkwell::values::FloatValue::from(right_value.into_float_value());
+                        let lhs = inkwell::values::FloatValue::from(f);
+                        inkwell::values::BasicValueEnum::from(builder.build_float_mul(lhs, rhs, ""))
+                    }
+                    BasicValueEnum::PointerValue(_) => todo!(),
+                    BasicValueEnum::StructValue(_) => todo!(),
+                    BasicValueEnum::VectorValue(_) => todo!(),
+                }
+            }
+            crate::parse::IntOperationType::Divide => {
+                if !check_is_valid_type(&left_value, &right_value) {
+                    panic!("type is not valid");
+                }
+                match left_value {
+                    BasicValueEnum::ArrayValue(_) => todo!(),
+                    BasicValueEnum::IntValue(v) => {
+                        let rhs = inkwell::values::IntValue::from(right_value.into_int_value());
+                        let lhs = inkwell::values::IntValue::from(v);
+                        inkwell::values::BasicValueEnum::from(
+                            builder.build_int_signed_div(lhs, rhs, ""),
+                        )
+                    }
+                    BasicValueEnum::FloatValue(f) => {
+                        let rhs = inkwell::values::FloatValue::from(right_value.into_float_value());
+                        let lhs = inkwell::values::FloatValue::from(f);
+                        inkwell::values::BasicValueEnum::from(builder.build_float_div(lhs, rhs, ""))
+                    }
+                    BasicValueEnum::PointerValue(_) => todo!(),
+                    BasicValueEnum::StructValue(_) => todo!(),
+                    BasicValueEnum::VectorValue(_) => todo!(),
+                }
+            }
             crate::parse::IntOperationType::None => todo!(),
         }
     } else {

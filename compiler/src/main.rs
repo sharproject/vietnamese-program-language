@@ -17,7 +17,6 @@ fn main() {
         .unwrap(),
     );
     let ast = parse::parse_string_to_ast(file.clone(), &config);
-    dbg!(&ast);
     let context = inkwell::context::Context::create();
     let mut code_compiler = compiler::Compiler::new(
         &context,
