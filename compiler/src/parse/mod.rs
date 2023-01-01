@@ -131,12 +131,12 @@ impl Operation {
             _ => None,
         }
     }
-    pub fn get_int_operation(&self) -> Option<IntOperationType> {
-        match self {
-            Self::IntOperation(v) => Some(v.clone()),
-            _ => None,
-        }
-    }
+    // pub fn get_int_operation(&self) -> Option<IntOperationType> {
+    //     match self {
+    //         Self::IntOperation(v) => Some(v.clone()),
+    //         _ => None,
+    //     }
+    // }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -374,7 +374,7 @@ impl AstNodeValue {
         } else if use_data.len() > 0 && variable_list.contains_key(&use_data.to_string()) {
             return Self::Variable(use_data.to_string());
         } else if check_string_is_math_operation(use_data) {
-            let node = parse_math_operation(use_data, false, variable_list);
+            let node = parse_math_operation(use_data, variable_list);
             return Self::Operation(Box::new(node));
         } else {
             return Self::default();
@@ -383,11 +383,28 @@ impl AstNodeValue {
 }
 fn parse_math_operation(
     data: &str,
-    by_pass_math_check: bool,
     variable_list: &std::collections::BTreeMap<String, AstNodeValue>,
 ) -> AstNode {
     let mut result = AstNode::default();
     result.raw = data.to_string();
+    if {
+        if !data.starts_with("-") {
+            false
+        } else {
+            let new_string = {
+                let mut d = data.chars();
+                d.next();
+                d.as_str()
+            };
+            new_string.parse::<f64>().is_ok()
+        }
+    } {
+        result.op = Operation::Value(ValueMetaType::MathValue(AstNodeValue::from_string(
+            data,
+            variable_list,
+        )));
+        return result;
+    }
     if !check_string_is_math_operation(data) {
         if data.starts_with("\"") && data.ends_with("\"") {
             panic!("cant calculator with string");
@@ -399,87 +416,158 @@ fn parse_math_operation(
                 variable_list,
             )))
         }
-    } else if data.starts_with("(") && data.ends_with(")") && by_pass_math_check {
-        return parse_math_operation(
-            remove_first_and_last(data.trim()).trim(),
-            false,
-            variable_list,
-        );
     } else {
         let mut bra = 0;
-        let mut i = 0;
         let mut tmp = "".to_string();
-        let mut char_list = data
+        let char_list_vec = data
             .to_string()
             .replace(" ", "")
             .chars()
-            .collect::<Vec<_>>()
-            .into_iter();
-        let mut op = vec![];
+            .collect::<Vec<_>>();
+        let mut char_list_iter = char_list_vec.clone().into_iter();
+        let mut op: Vec<_> = vec![];
         let mut value = vec![];
-        while let Some(mut c) = char_list.next() {
-            i = i + 1;
-            tmp.push(c);
-            if c == '(' {
-                bra = bra + 1;
-            } else if c == ')' {
-                bra = bra - 1
+        while let Some(mut v) = char_list_iter.next() {
+            let mut push_op = IntOperationType::Plus;
+            tmp.push(v);
+            if v == '(' {
+                bra = bra + 1
+            }
+            if v == ')' {
+                bra = bra - 1;
             }
 
-            if bra == 0 && i != 0 {
+            if bra == 0 {
                 let mut pushable = true;
-                if c.is_numeric() {
-                    while let Some(ch) = char_list.next() {
+                for o in OPS_LIST.clone() {
+                    if v.to_string() == o {
+                        push_op = IntOperationType::from_string_symbol(&v.to_string());
+                        tmp = "".to_string();
+                        pushable = false
+                    }
+                }
+                if v.is_numeric() {
+                    while let Some(ch) = char_list_iter.next() {
+                        #[allow(unused_assignments)]
                         if ch.is_numeric() || ch == '.' {
                             tmp.push(ch);
                         } else {
-                            // let mut new_char_list = vec![];
-                            // new_char_list.push(c);
-                            // new_char_list.extend_from_slice(char_list.as_slice());
-                            // char_list.clone_from(&new_char_list.into_iter());
-                            c = ch;
-                            value.push(tmp.clone());
-                            pushable = false;
+                            v = ch;
                             break;
                         }
                     }
                 }
-
                 for o in OPS_LIST.clone() {
-                    if c.to_string() == o {
-                        op.push(IntOperationType::from_string_symbol(&c.to_string()));
-                        pushable = false;
-                        tmp = "".to_string();
+                    if v.to_string() == o {
+                        push_op = IntOperationType::from_string_symbol(&v.to_string());
                     }
                 }
-
-                if pushable {
-                    value.push(tmp.clone());
+                op.push(push_op);
+                if tmp.len() > 0 && pushable {
+                    value.push(
+                        if tmp.clone().starts_with("(") && tmp.clone().ends_with(")") {
+                            remove_first_and_last(&tmp.clone()).to_string()
+                        } else {
+                            tmp.clone()
+                        },
+                    );
                     tmp = "".to_string();
                 }
             }
         }
+
+        // println!("data : {:?}, value : {:#?}, op :{:#?}", data, value, op);
         {
-            let index = 0;
-            let left = parse_math_operation(&value.remove(index), true, variable_list);
-            result.op = Operation::IntOperation(op.remove(0));
-            result.left.push(left);
+            let mut left_op = "".to_string();
             let mut right_op = "".to_string();
+            let mut operation = IntOperationType::None;
             for i in 0..value.len() {
-                if value[i].parse::<f64>().is_ok() {
-                    if i > 0 {
-                        right_op.push_str(&op[i - 1].to_symbol_string());
-                    }
-                    right_op.push_str(&value[i]);
+                if i < (((value.len() as u32 as f64) / 2.0).round() as i32)
+                    .try_into()
+                    .unwrap()
+                {
+                    left_op.push_str(&op[i].to_symbol_string());
+                    left_op.push_str(
+                        &(if op[i].to_symbol_string() == "-" {
+                            format!("({})", value[i].clone())
+                        } else {
+                            value[i].clone()
+                        }),
+                    );
                 } else {
-                    right_op.push_str(&value[i]);
-                    if i > 0 {
-                        right_op.push_str(&op[i - 1].to_symbol_string());
+                    if let IntOperationType::None = operation {
+                        operation = op[i].clone();
                     }
+                    right_op.push_str(
+                        &op[if i + 1 >= op.len() {
+                            op.len() - 1
+                        } else {
+                            i + 1
+                        }]
+                        .to_symbol_string(),
+                    );
+                    right_op.push_str(
+                        &(if op[if i + 1 == op.len() { op.len()-1 } else { i + 1 }].to_symbol_string()
+                            == "-"
+                        {
+                            format!("({})", value[i].clone())
+                        } else {
+                            value[i].clone()
+                        }),
+                    );
                 }
             }
-            let right = parse_math_operation(&right_op, true, variable_list);
-            result.right.push(right);
+
+            result.op = Operation::IntOperation(operation);
+
+            if left_op.starts_with("-") {
+                let mut left_node = AstNode::default();
+                left_node.raw = left_op.to_string();
+                left_node.op = Operation::IntOperation(IntOperationType::Minus);
+                left_node
+                    .left
+                    .push(parse_math_operation("0", variable_list));
+                left_node.right.push(parse_math_operation(
+                    &{
+                        let mut new_op = left_op.to_string();
+                        new_op.remove(0);
+                        remove_first_and_last(&new_op).to_string()
+                    },
+                    variable_list,
+                ));
+                result.left.push(left_node);
+            } else {
+                let mut new_op = left_op.to_string();
+                new_op.remove(0);
+                result
+                    .left
+                    .push(parse_math_operation(&new_op, variable_list));
+            }
+            if right_op.starts_with("-") {
+                let mut right_node = AstNode::default();
+                right_node.raw = right_op.to_string();
+                right_node.op = Operation::IntOperation(IntOperationType::Minus);
+                right_node
+                    .left
+                    .push(parse_math_operation("0", variable_list));
+                right_node.right.push(parse_math_operation(
+                    &{
+                        let mut new_op = right_op.to_string();
+                        new_op.remove(0);
+                        remove_first_and_last(&new_op).to_string()
+                    },
+                    variable_list,
+                ));
+                result.right.push(right_node);
+            } else {
+                let mut new_op = right_op.to_string();
+                if new_op.starts_with("+") {
+                    new_op.remove(0);
+                }
+                result
+                    .right
+                    .push(parse_math_operation(&new_op, variable_list));
+            }
         }
     }
     result
@@ -488,6 +576,9 @@ fn parse_math_operation(
 fn check_string_is_math_operation(data: &str) -> bool {
     let mut result = false;
     let mut setted = false;
+    if data.starts_with("\"") && data.ends_with("\"") {
+        return false;
+    }
     for o in OPS_LIST.clone() {
         if data.contains(&o) && !setted {
             setted = true;
