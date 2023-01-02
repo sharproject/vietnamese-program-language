@@ -289,15 +289,8 @@ impl ParseExpr {
                     }
                 }
                 AstNodeValue::Operation(o) => {
-                    let value = compile_math_operation(
-                        context,
-                        builder,
-                        module,
-                        variable,
-                        variable_metadata,
-                        line,
-                        &o,
-                    );
+                    let value =
+                        compile_math_operation(context, builder, variable, variable_metadata, &o);
                     match value {
                         BasicValueEnum::ArrayValue(_) => todo!(),
                         BasicValueEnum::IntValue(_) => {
@@ -396,7 +389,32 @@ impl ParseExpr {
                 crate::parse::AstNodeValue::None => todo!(),
                 crate::parse::AstNodeValue::Bool(_) => todo!(),
                 crate::parse::AstNodeValue::Variable(_) => todo!(),
-                crate::parse::AstNodeValue::Operation(_) => todo!(),
+                crate::parse::AstNodeValue::Operation(op) => {
+                    let node =
+                        compile_math_operation(context, builder, variable, variable_metadata, &op);
+                    match node {
+                        BasicValueEnum::ArrayValue(_) => todo!(),
+                        BasicValueEnum::IntValue(i) => {
+                            let ptr = builder.build_alloca(context.i64_type(), &variable_name);
+                            builder.build_store(ptr, i);
+
+                            variable.insert(variable_name.clone(), ptr);
+                            variable_metadata
+                                .insert(variable_name.clone(), VariableMetaType::Number);
+                        }
+                        BasicValueEnum::FloatValue(f) => {
+                            let ptr = builder.build_alloca(context.f64_type(), &variable_name);
+                            builder.build_store(ptr, f);
+
+                            variable.insert(variable_name.clone(), ptr);
+                            variable_metadata
+                                .insert(variable_name.clone(), VariableMetaType::Number);
+                        },
+                        BasicValueEnum::PointerValue(_) => todo!(),
+                        BasicValueEnum::StructValue(_) => todo!(),
+                        BasicValueEnum::VectorValue(_) => todo!(),
+                    }
+                }
             },
             None => todo!(),
         }
@@ -490,10 +508,8 @@ impl ParseExpr {
 fn compile_math_operation<'a>(
     context: &'a Context,
     builder: &Builder<'a>,
-    module: &Module<'a>,
     variable: &BTreeMap<String, PointerValue<'a>>,
     variable_metadata: &BTreeMap<String, VariableMetaType>,
-    line: usize,
     node: &AstNode,
 ) -> BasicValueEnum<'a> {
     if let Operation::Value(v) = &node.op {
@@ -530,27 +546,15 @@ fn compile_math_operation<'a>(
         let fn_match_op = |a: &AstNode| match &a.op {
             Operation::None => todo!(),
             Operation::Ident(_) => todo!(),
-            Operation::Value(_) => compile_math_operation(
-                context,
-                builder,
-                module,
-                variable,
-                variable_metadata,
-                line,
-                a,
-            ),
+            Operation::Value(_) => {
+                compile_math_operation(context, builder, variable, variable_metadata, a)
+            }
             Operation::Call => todo!(),
             Operation::NewVariable => todo!(),
             Operation::SetVariable => todo!(),
-            Operation::IntOperation(_) => compile_math_operation(
-                context,
-                builder,
-                module,
-                variable,
-                variable_metadata,
-                line,
-                a,
-            ),
+            Operation::IntOperation(_) => {
+                compile_math_operation(context, builder, variable, variable_metadata, a)
+            }
         };
         let left_value = fn_match_op(&node.left[0]);
         let right_value = fn_match_op(&node.right[0]);
